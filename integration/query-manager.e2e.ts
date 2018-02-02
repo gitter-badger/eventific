@@ -1,3 +1,4 @@
+import 'core-js';
 import { IQueryManager, QueryManager, IViewHandler, ViewHandler } from '@eventific/query';
 import { AccountAggregate } from './account/account.aggregate';
 import { MockStore } from '@eventific/test';

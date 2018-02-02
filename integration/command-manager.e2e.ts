@@ -1,3 +1,4 @@
+import 'core-js';
 import { CommandManager } from '@eventific/command';
 import { bootstrap, IEvent } from '@eventific/core';
 import { MockStore, MockTransport } from '@eventific/test';
@@ -39,7 +40,7 @@ test('When I send a command it should be inserted to the store', async () => {
     }
   })).resolves.toEqual(undefined);
   const result = await MockStore.GetEvents(AccountAggregate.Name, '27e7b187-5a11-41fe-afb7-a071c6c17b6d');
-  expect(result.events).toHaveLength(1);
+  expect((await result.next()).value).toBeDefined();
 });
 
 test('It should not be possible to execute Create command twice on the same aggregate', async () => {

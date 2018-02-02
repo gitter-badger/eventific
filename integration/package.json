@@ -17,6 +17,7 @@
     "@eventific/test": "^0.2.0",
     "@types/jest": "^22.1.0",
     "@types/mongodb": "^3.0.5",
+    "core-js": "^2.5.3",
     "jest": "^22.1.4",
     "mongodb": "^3.0.1",
     "promise-retry": "^1.1.1"

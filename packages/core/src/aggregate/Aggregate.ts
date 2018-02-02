@@ -90,11 +90,13 @@ export function Aggregate(options: AggregateOptions) {
         }
       }
 
-      public async applyToState(stateDef: {version: number, state: any}, events: EventMessage[]) {
-        const sortedEvents = events.sort((e1, e2) => e1.eventId - e2.eventId);
+      public async applyToState(
+        stateDef: {version: number, state: any},
+        events: AsyncIterable<EventMessage> | Iterable<EventMessage>
+      ) {
         let state: any = stateDef.state;
         let version = stateDef.version;
-        for (const event of sortedEvents) {
+        for await (const event of events) {
           Joi.assert(event, eventMessageSchema);
           if ( state === null && event.eventId !== 0 ) {
             throw new Error('State can not be null if this is not the initial event');
@@ -116,15 +118,13 @@ export function Aggregate(options: AggregateOptions) {
         return {version, state};
       }
 
-      public async getState(aggregateId: string): Promise<{version: number, state: any}> {
-        const eventResult = await this._store.getEvents(this.name, aggregateId);
-        let state: any = null;
-        let version: number = -1;
-        if (eventResult.snapshot) {
-          state = eventResult.snapshot.state || state;
-          version = eventResult.snapshot.version || version;
-        }
-        return await this.applyToState({state, version}, eventResult.events);
+      public async getState<R>(
+        aggregateId: string
+      ): Promise<{version: number, state: R}> {
+        const eventIterator = await this._store.getEvents<any, R>(this.name, aggregateId);
+        const state: R | undefined = eventIterator.snapshotState;
+        const version: number = eventIterator.snapshotVersion || -1;
+        return await this.applyToState({state, version}, eventIterator);
       }
 
       public getEventNames(): string[] {

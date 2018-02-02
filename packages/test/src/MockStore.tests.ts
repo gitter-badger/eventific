@@ -1,5 +1,6 @@
 import { Injector, EventMessage } from '@eventific/core';
 import { MockStore } from '.';
+import { MockEventsWithSnapshotIterator } from './mock-events-with-snapshot.iterator';
 
 let injector: Injector;
 let mockStore: MockStore;
@@ -21,8 +22,7 @@ test('applyEvents() should add events to the store', async () => {
     eventId: 0
   }]);
   const result = await mockStore.getEvents('test', '0');
-  expect(result.events).toHaveLength(1);
-  expect(result.events[0].eventId).toEqual(0);
+  expect((await result.next()).value.eventId).toEqual(0);
 });
 
 test('It should be possible to get all events from current instance from static GetEvents()', async () => {
@@ -31,8 +31,7 @@ test('It should be possible to get all events from current instance from static 
     eventId: 0
   }]);
   const result = await MockStore.GetEvents('test', '0');
-  expect(result.events).toHaveLength(1);
-  expect(result.events[0].eventId).toEqual(0);
+  expect((await result.next()).value.eventId).toEqual(0);
 });
 
 test('It should be possible to insert events from static ApplyEvents()', async () => {
@@ -41,8 +40,7 @@ test('It should be possible to insert events from static ApplyEvents()', async (
     eventId: 0
   }]);
   const result = await mockStore.getEvents('test', '0');
-  expect(result.events).toHaveLength(1);
-  expect(result.events[0].eventId).toEqual(0);
+  expect((await result.next()).value.eventId).toEqual(0);
 });
 
 test('static EmitEvents() should call registered callbacks given that the params match', async () => {
@@ -122,6 +120,6 @@ test('onEvent() should throw if store is not started', async () => {
   }).toThrow();
 });
 
-test('getEvents() should return an empty list if no events exists', async () => {
-  await expect(mockStore.getEvents('Test', '0000')).resolves.toEqual({events: []});
+test('getEvents() should return an iterator even if no events exists', async () => {
+  await expect(mockStore.getEvents('Test', '0000')).resolves.toBeInstanceOf(MockEventsWithSnapshotIterator);
 });

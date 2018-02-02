@@ -1,6 +1,6 @@
 import { EventMessage } from '../event/EventMessage';
 import { Injector } from '../injector/Injector';
-import { GetEventsResult } from './GetEventsResult';
+import { EventsWithSnapshotIterator } from './events-with-snapshot.iterator';
 
 
 /**
@@ -23,10 +23,15 @@ export abstract class IStore {
    *
    *
    */
-  public abstract getEvents<T>(aggregateName: string, aggregateId: string): Promise<GetEventsResult<T>>;
+  public abstract getEvents<T, R>(
+    aggregateName: string,
+    aggregateId: string,
+    options?: { skipSnapshot?: boolean }
+    ): Promise<EventsWithSnapshotIterator<T, R>>;
 
-  public abstract applyEvents<T>(aggregateName: string, events: EventMessage[], state?: T): Promise<void>;
+  public abstract applyEvents<T>(aggregateName: string, events: EventMessage[]): Promise<void>;
   public abstract purgeAllSnapshots(aggregateName: string): Promise<void>;
+  public abstract saveSnapshots(aggregateName: string, aggregateId: string, version: number, state: any): Promise<void>;
   public abstract onEvent(
     aggregateName: string,
     eventName: string | null,

@@ -1,3 +1,4 @@
+import 'core-js';
 import { MongoStore } from '@eventific/mongo-store';
 import { Injector, InternalLogger, Logger } from '@eventific/core';
 import { connect, Db } from 'mongodb';
@@ -38,14 +39,14 @@ test('MongoStore should add events to the database', async () => {
     {...event}
   ]);
   const result = await store.getEvents('Test', '0');
-  await expect(result.events).toEqual([event]);
+  await expect((await result.next()).value).toEqual(event);
 });
 
 test('MongoStore should handle a bunch of events', async () => {
   jest.setTimeout(30000);
   const injector = new Injector();
   injector.set({provide: Logger, useConstant: new InternalLogger()});
-  const store = MongoStore._CreateStore(injector);
+  const store: MongoStore = MongoStore._CreateStore(injector);
   await store.start();
   const events = [];
   for(let i = 0; i <10000; i++){
@@ -63,7 +64,11 @@ test('MongoStore should handle a bunch of events', async () => {
   }
   await store.applyEvents('Test', events);
   const result = await store.getEvents('Test', '1234');
-  await expect(result.events).toHaveLength(10000);
+  let count = 0;
+  for await (const r of result) {
+    count += 1;
+  }
+  expect(count).toEqual(10000);
 });
 
 test('onEvent() should pass messages when inserted to the db, to the provided callback', async (done) => {

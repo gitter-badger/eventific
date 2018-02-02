@@ -33,6 +33,9 @@
     "rollup-plugin-node-resolve": "^3.0.2",
     "typescript": "^2.6.2"
   },
+  "peerDependencies": {
+    "core-js": "^2.5.3"
+  },
   "dependencies": {
     "@types/joi": "^13.0.5",
     "@types/node-emoji": "^1.8.0",

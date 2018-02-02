@@ -1,3 +1,4 @@
+import 'core-js';
 import { RabbitTransport } from '@eventific/rabbit-transport';
 import { Injector, InternalLogger, Logger, CommandMessage } from '@eventific/core';
 

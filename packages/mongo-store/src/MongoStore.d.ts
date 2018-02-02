@@ -1,4 +1,4 @@
-import { EventMessage, GetEventsResult, IStore, Logger } from '@eventific/core';
+import { EventMessage, EventsWithSnapshotIterator, IStore, Logger } from '@eventific/core';
 /**
  * The options that can be passed to this store
  *
@@ -43,12 +43,16 @@ export declare class MongoStore extends IStore {
     /**
      * @inheritDoc
      */
-    getEvents<T>(aggregateName: string, aggregateId: string): Promise<GetEventsResult<T>>;
+    getEvents<T, R>(aggregateName: string, aggregateId: string, options?: {
+        skipSnapshot?: boolean;
+    }): Promise<EventsWithSnapshotIterator<T, R>>;
     /**
      * @inheritDoc
      */
-    applyEvents<T>(aggregateName: string, events: any[], state?: T): Promise<void>;
+    applyEvents<T>(aggregateName: string, events: any[]): Promise<void>;
     purgeAllSnapshots(aggregateName: string): Promise<void>;
+    saveSnapshots(aggregateName: string, aggregateId: string, version: number, state: any): Promise<void>;
     onEvent(aggregateName: string, eventName: string | null, callback: (event: EventMessage) => Promise<void>): void;
     private _getCollection(aggregateName);
+    private _getSnapshotCollection(aggregateName);
 }

@@ -1,5 +1,5 @@
 export { Store } from './src/store/Store';
-export { GetEventsResult } from './src/store/GetEventsResult';
+export { EventsWithSnapshotIterator } from './src/store/events-with-snapshot.iterator';
 export { IStore } from './src/store/IStore';
 export { StoreOptions } from './src/store/StoreOptions';
 export { Transport } from './src/transport/Transport';

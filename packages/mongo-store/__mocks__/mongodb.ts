@@ -17,6 +17,7 @@ export const CollectionInstance = {
   find: jest.fn((query: object) => {
     return CursorInstance;
   }),
+  count: jest.fn(() => 0),
   insertMany: jest.fn((docs: object[]) => {
 
   })
@@ -38,7 +39,11 @@ export const CursorInstance = {
         aggregateId: '1234'
       }
       ]
-  })
+  }),
+  next: jest.fn(() => ({
+    eventId: 1,
+    aggregateId: '1234'
+  }))
 };
 
 export class MongoClient {

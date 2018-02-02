@@ -1,3 +1,4 @@
+import 'core-js';
 import { RestTransport } from '@eventific/rest-transport';
 import { Injector, InternalLogger, Logger, CommandMessage } from '@eventific/core';
 import axios from 'axios';

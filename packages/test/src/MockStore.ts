@@ -1,5 +1,6 @@
-import { EventMessage, GetEventsResult, IStore, Store } from '@eventific/core';
+import { EventMessage, EventsWithSnapshotIterator, IStore, Store } from '@eventific/core';
 import * as Joi from 'joi';
+import { MockEventsWithSnapshotIterator } from './mock-events-with-snapshot.iterator';
 
 /**
  * A test utility that simulates a store. This construct uses an in memory storage mechanism for events and can
@@ -13,8 +14,11 @@ import * as Joi from 'joi';
 export class MockStore extends IStore {
   public static _instance: MockStore;
 
-  public static async GetEvents<T>(aggregateName: string, aggregateId: string): Promise<GetEventsResult<T>> {
-    return await MockStore._instance.getEvents<T>(aggregateName, aggregateId);
+  public static async GetEvents<T, R>(
+    aggregateName: string,
+    aggregateId: string
+  ): Promise<EventsWithSnapshotIterator<T, R>> {
+    return await MockStore._instance.getEvents<T, R>(aggregateName, aggregateId);
   }
 
   public static async EmitEvents(aggregateName: string, ...events: EventMessage[]): Promise<void> {
@@ -56,14 +60,16 @@ export class MockStore extends IStore {
     }
   }
 
-  public async getEvents<T>(aggregateName: string, aggregateId: string): Promise<GetEventsResult<T>> {
+  public async getEvents<T, R>(
+    aggregateName: string,
+    aggregateId: string,
+    options?: {skipSnapshot?: boolean}
+    ): Promise<MockEventsWithSnapshotIterator<T, R>> {
     if (this._started) {
       Joi.assert(aggregateName, Joi.string());
       Joi.assert(aggregateId, Joi.string());
       const events = (this._events.get(aggregateName) || []).filter((x) => x.aggregateId === aggregateId);
-      return {
-        events
-      };
+      return new MockEventsWithSnapshotIterator<T, R>(events, events.length - 1);
     } else {
       throw new Error('Not started');
     }
@@ -101,6 +107,15 @@ export class MockStore extends IStore {
     } else {
       throw new Error('Not started');
     }
+  }
+
+  public async saveSnapshots(
+    aggregateName: string,
+    aggregateId: string,
+    version: number,
+    state: any
+  ): Promise<void> {
+    // TODO: implement this
   }
 
   public onEvent(

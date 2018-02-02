@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 /**
  * @public
  */
-export interface EventMessage<T = undefined> {
+export interface EventMessage<T = any> {
   aggregateId: string;
   content: T;
   event: string;

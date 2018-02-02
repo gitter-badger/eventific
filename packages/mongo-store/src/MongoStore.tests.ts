@@ -43,7 +43,7 @@ test('getEvents() should return a list of events', async () => {
   const store = MongoStore._CreateStore(injector);
   await store.start();
   const result = await store.getEvents<any>('Test', '0000');
-  expect(result.events).toHaveLength(3);
+  expect((await result.next()).value).toBeDefined();
 });
 
 test('getEvents() should query a collection with correct name', async () => {

@@ -1,7 +1,8 @@
-import { EventMessage, GetEventsResult, InjectSettings, IStore, Logger, Store } from '@eventific/core';
+import { EventMessage, EventsWithSnapshotIterator, InjectSettings, IStore, Logger, Store } from '@eventific/core';
 import * as Joi from 'joi';
 import { Db, MongoClient } from 'mongodb';
 import promiseRetry = require('promise-retry');
+import { MongoEventsWithSnapshotIterator } from './mongo-events-with-snapshot.iterator';
 
 /**
  * The options that can be passed to this store
@@ -83,24 +84,39 @@ export class MongoStore extends IStore {
   /**
    * @inheritDoc
    */
-  public async getEvents<T>(aggregateName: string, aggregateId: string): Promise<GetEventsResult<T>> {
+  public async getEvents<T, R>(
+    aggregateName: string,
+    aggregateId: string,
+    options?: { skipSnapshot?: boolean }
+    ): Promise<EventsWithSnapshotIterator<T, R>> {
     const collection = await this._getCollection(aggregateName);
-    const events = await collection.find<EventMessage>({ aggregateId }).toArray();
-    for (const event of events) {
-      delete (event as any)._id;
+    const snapshotCollection = await this._getSnapshotCollection(aggregateName);
+    const approxVersion = (await collection.count({ aggregateId })) - 1;
+    let snapshot;
+    if (options && !options.skipSnapshot) {
+      snapshot = await snapshotCollection.findOne<{ version: number, state: R }>({ aggregateId });
     }
-    return { events };
+    return new MongoEventsWithSnapshotIterator<T, R>(
+      collection.find<EventMessage>({ aggregateId }),
+      approxVersion,
+      snapshot || undefined
+    );
   }
 
   /**
    * @inheritDoc
    */
-  public async applyEvents<T>(aggregateName: string, events: any[], state?: T): Promise<void> {
+  public async applyEvents<T>(aggregateName: string, events: any[]): Promise<void> {
     const collection = await this._getCollection(aggregateName);
     await collection.insertMany(events);
   }
 
   public async purgeAllSnapshots(aggregateName: string): Promise<void> {
+    // TODO: Add snapshot functionality
+  }
+
+  public async saveSnapshots(aggregateName: string, aggregateId: string, version: number, state: any): Promise<void> {
+    const snapshotCollection = await this._getSnapshotCollection(aggregateName);
     // TODO: Add snapshot functionality
   }
 
@@ -112,6 +128,7 @@ export class MongoStore extends IStore {
     Joi.assert(aggregateName, Joi.string(), 'Aggregate name has to be a string and cannot be empty');
     Joi.assert(callback, Joi.func(), 'callback must be a function');
     const query = eventName ? {event: eventName} : undefined;
+    // .sort({$natural: -1}).limit(1)
     this._getCollection(aggregateName).then(async (collection) => {
       await promiseRetry({
         maxTimeout: 3000
@@ -157,6 +174,23 @@ export class MongoStore extends IStore {
     }
 
     return this._db.collection(aggregateName.toLowerCase());
+  }
+
+  private async _getSnapshotCollection(aggregateName: string) {
+    try {
+      await this._db.createCollection(
+        aggregateName.toLowerCase() + '-snapshots'
+      );
+      await this._db.createIndex(
+        aggregateName.toLowerCase() + '-snapshots',
+        { aggregateId: 1 },
+        { unique: true }
+      );
+    } catch (ex) {
+      // TODO: log exception
+    }
+
+    return this._db.collection(aggregateName.toLowerCase() + '-snapshots');
   }
 
 }

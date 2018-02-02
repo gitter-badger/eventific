@@ -1,7 +1,9 @@
 import { EventMessage, EventsWithSnapshotIterator, InjectSettings, IStore, Logger, Store } from '@eventific/core';
 import * as Joi from 'joi';
 import { Db, MongoClient } from 'mongodb';
-import promiseRetry = require('promise-retry');
+
+// tslint:disable-next-line
+const promiseRetry = require('promise-retry');
 import { MongoEventsWithSnapshotIterator } from './mongo-events-with-snapshot.iterator';
 
 /**
